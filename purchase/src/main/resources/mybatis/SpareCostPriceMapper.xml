@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hs.mapper.SpareCostPriceMapper" >
+    <resultMap id="BaseResultMap" type="com.hs.bean.sparecostprice.SpareCostPrice" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="legal_person_code" property="legalPersonCode" jdbcType="VARCHAR" />
+        <result column="spare_code" property="materialCode" jdbcType="VARCHAR" />
+        <result column="price_start_time" property="startTime" jdbcType="TIMESTAMP" />
+        <result column="price_end_time" property="endTime" jdbcType="TIMESTAMP" />
+        <result column="price_type" property="priceTypeName" jdbcType="VARCHAR" />
+        <result column="currency_code_name" property="currencyCodeName" jdbcType="VARCHAR" />
+        <result column="price" property="price" jdbcType="DECIMAL" />
+        <result column="legal_plant_code" property="legalPlantCode" jdbcType="VARCHAR" />
+        <result column="remark" property="remark" jdbcType="VARCHAR" />
+        <result column="status" property="status" jdbcType="TINYINT" />
+        <result column="version" property="version" jdbcType="INTEGER" />
+        <result column="create_man" property="creatorName" jdbcType="VARCHAR" />
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="modify_man" property="modifyMan" jdbcType="VARCHAR" />
+        <result column="modify_time" property="modifyTime" jdbcType="TIMESTAMP" />
+        <result column="tax_dec" property="taxDec" jdbcType="VARCHAR" />
+        <result column="spare_name" property="materialName" jdbcType="VARCHAR" />
+        <result column="legal_person_name" property="legalPersonName" jdbcType="VARCHAR" />
+    </resultMap>
+
+
+
+    <select id="queryPage" resultMap="BaseResultMap">
+        select sp.code as spare_code,sp.name as spare_name,
+               lpa.legal_plant_code,
+               scp.price_type,scp.currency_code_name,scp.tax_dec,scp.price,scp.price_start_time,scp.price_end_time,scp.status,scp.create_man,scp.remark,scp.id,
+               lpe.legal_person_name
+        from spare_cost_price as scp
+        left join spare as sp on scp.spare_code = sp.code
+        left join legal_person as lpe on scp.legal_person_code = lpe.legal_person_code
+        left join legal_plant as lpa on scp.legal_plant_code = lpa.legal_plant_code
+        left join tax as ta on scp.tax_dec = ta.tax_dec
+        <where>
+            <if test="cost.legalPersonCode != null and cost.legalPersonCode != ''">
+                and scp.legal_person_code like concat(#{cost.legalPersonCode},'%')
+            </if>
+            <if test="cost.legalPlantCode != null and cost.legalPlantCode != ''">
+                and scp.legal_plant_code like concat(#{cost.legalPlantCode},'%')
+            </if>
+            <if test="cost.materialCode != null and cost.materialCode != ''">
+                and scp.spare_code like concat(#{cost.materialCode},'%')
+            </if>
+
+            <if test="cost.taxType != null and cost.taxType != ''">
+                and scp.tax_dec like concat(#{cost.taxType},'%')
+            </if>
+            <if test="cost.priceType != null and cost.priceType != ''">
+                and scp.price_type like concat(#{cost.priceType},'%')
+            </if>
+            <if test="cost.currencyCodeName != null and cost.currencyCodeName != ''">
+                and scp.currency_type like concat(#{cost.currencyCodeName},'%')
+            </if>
+            <if test="cost.status != null and cost.status != ''">
+                and scp.status like concat(#{cost.status},'%')
+            </if>
+
+<!--            <if test="cost.startStartTime != null and cost.startStartTime != ''">
+                and scp.price_start_time like concat(#{cost.startStartTime},'%')
+            </if>
+            <if test="cost.startEndTime != null and cost.startEndTime != ''">
+                and scp.price_end_time like concat(#{cost.startEndTime},'%')
+            </if>-->
+        </where>
+        order by scp.price_start_time desc
+        limit #{cost.offSize},#{cost.pageSize}
+    </select>
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(scp.id)
+        from spare_cost_price as scp
+        left join spare as sp on scp.spare_code = sp.code
+        left join legal_person as lpe on scp.legal_person_code = lpe.legal_person_code
+        left join legal_plant as lpa on scp.legal_plant_code = lpa.legal_plant_code
+        left join tax as ta on scp.tax_dec = ta.tax_dec
+        <where>
+            <if test="cost.legalPersonCode != null and cost.legalPersonCode != ''">
+                and scp.legal_person_code like concat(#{cost.legalPersonCode},'%')
+            </if>
+            <if test="cost.legalPlantCode != null and cost.legalPlantCode != ''">
+                and scp.legal_plant_code like concat(#{cost.legalPlantCode},'%')
+            </if>
+            <if test="cost.materialCode != null and cost.materialCode != ''">
+                and scp.spare_code like concat(#{cost.materialCode},'%')
+            </if>
+
+            <if test="cost.taxType != null and cost.taxType != ''">
+                and scp.tax_dec like concat(#{cost.taxType},'%')
+            </if>
+            <if test="cost.priceType != null and cost.priceType != ''">
+                and scp.price_type like concat(#{cost.priceType},'%')
+            </if>
+            <if test="cost.currencyCodeName != null and cost.currencyCodeName != ''">
+                and scp.currency_type like concat(#{cost.currencyCodeName},'%')
+            </if>
+            <if test="cost.status != null and cost.status != ''">
+                and scp.status like concat(#{cost.status},'%')
+            </if>
+            <!--            <if test="cost.startStartTime != null and cost.startStartTime != ''">
+                            and scp.price_start_time like concat(#{cost.startStartTime},'%')
+                        </if>
+                        <if test="cost.startEndTime != null and cost.startEndTime != ''">
+                            and scp.price_end_time like concat(#{cost.startEndTime},'%')
+                        </if>-->
+        </where>
+    </select>
+
+    <select id="getListByPersonCodeAndPlantCode" resultMap="BaseResultMap">
+        select * from spare_cost_price
+        <where>
+            <if test="legalPersonCode != null and legalPersonCode != ''">
+                and legal_person_code like concat(#{legalPersonCode},'%')
+            </if>
+            <if test="legalPlantCode != null and legalPlantCode != ''">
+                and legal_plant_code like concat(#{legalPlantCode},'%')
+            </if>
+        </where>
+    </select>
+
+
+    <insert id="add">
+        insert into spare_cost_price (legal_person_code,spare_code,price_start_time,price_end_time,
+                                      price_type,currency_code_name,price,legal_plant_code,remark,
+                                      create_man,create_time,modify_man,modify_time,tax_dec)
+        values (#{cost.legalPersonCode},#{cost.materialCode},#{cost.startTime},#{cost.endTime},
+                #{cost.priceTypeName},#{cost.currencyCodeName},#{cost.price},#{cost.legalPlantCode},#{cost.remark},
+                #{cost.creatorName},#{cost.createTime},#{cost.modifyMan},#{cost.modifyTime},#{cost.taxDec})
+    </insert>
+
+
+    <update id="uptadeOldStartTime">
+        update spare_cost_price set price_start_time = #{plusOrMinDay}
+        <where>
+            spare_code = #{materialCode}
+        </where>
+    </update>
+    <delete id="deleteOldSpareCostPrice">
+        delete from spare_cost_price
+        <where>
+            spare_code = #{materialCode}
+        </where>
+    </delete>
+
+
+    <select id="getListByMaterialCode" resultMap="BaseResultMap">
+        select * from spare_cost_price
+        <where>
+            <if test="materialCode != null and materialCode != ''">
+                and spare_code like concat(#{materialCode},'%')
+            </if>
+
+        </where>
+    </select>
+
+    <delete id="deleteByList">
+        delete from spare_cost_price
+        <where>
+            <foreach collection="deleteList" item="cost" open="(" separator=") or (" close=")">
+                price_start_time = #{cost.startTime} and price_end_time = #{cost.endTime}
+            </foreach>
+        </where>
+    </delete>
+
+    <insert id="addByList">
+        insert into spare_cost_price(legal_person_code,spare_code,price_start_time,price_end_time,
+                                     price_type,currency_code_name,price,legal_plant_code,remark,
+                                     create_man,create_time,modify_man,modify_time,tax_dec)
+        values
+        <foreach collection="addList" item="cost" open="(" separator="),(" close=")">
+            #{cost.legalPersonCode},#{cost.materialCode},#{cost.startTime},#{cost.endTime},
+            #{cost.priceTypeName},#{cost.currencyCodeName},#{cost.price},#{cost.legalPlantCode},#{cost.remark},
+            #{cost.creatorName},#{cost.createTime},#{cost.modifyMan},#{cost.modifyTime},#{cost.taxDec}
+        </foreach>
+    </insert>
+
+
+
+
+</mapper>

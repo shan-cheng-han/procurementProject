@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hs.mapper.LegalPlantMapper" >
+  <resultMap id="BaseResultMap" type="com.hs.bean.legalplant.LegalPlant" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="legal_plant_code" property="legalPlantCode" jdbcType="VARCHAR" />
+    <result column="legal_plant_des" property="legalPlantDec" jdbcType="VARCHAR" />
+    <result column="legal_person_code" property="legalPersonCode" jdbcType="VARCHAR" />
+    <result column="enable" property="enabled" jdbcType="VARCHAR" />
+    <result column="version" property="version" jdbcType="INTEGER" />
+    <result column="create_man" property="createMan" jdbcType="VARCHAR" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="modify_man" property="modifyMan" jdbcType="VARCHAR" />
+    <result column="modify_time" property="modifyTime" jdbcType="TIMESTAMP" />
+    <result column="legal_person_name" property="legalPersonName" jdbcType="VARCHAR" />
+  </resultMap>
+
+
+  <!--分页查询法人工厂-->
+  <select id="getLegalPlantList" resultMap="BaseResultMap">
+    select lpa.*,
+           lpe.legal_person_code,lpe.legal_person_name
+    from legal_plant as lpa
+    left join legal_person as lpe on lpa.legal_person_code = lpe.legal_person_code
+    <where>
+      <if test="queryLegalPlantVo.legalPersonName != null">
+        and lpe.legal_person_name like concat('%',#{queryLegalPlantVo.legalPersonName},'%')
+      </if>
+      <if test="queryLegalPlantVo.legalPlantCode != null">
+        and lpa.legal_plant_code like concat('%',#{queryLegalPlantVo.legalPlantCode},'%')
+      </if>
+      <if test="queryLegalPlantVo.legalPlantDec != null">
+        and lpa.legal_plant_des like concat('%',#{queryLegalPlantVo.legalPlantDec},'%')
+      </if>
+      <if test="queryLegalPlantVo.enabled != null">
+        and lpa.enable like concat('%',#{queryLegalPlantVo.enabled},'%')
+      </if>
+    </where>
+    order by lpa.id asc
+    limit #{queryLegalPlantVo.offSize},#{queryLegalPlantVo.pageSize}
+  </select>
+  <!--条件查询法人工厂数量-->
+  <select id="getCount" resultType="java.lang.Integer">
+    select count(lpa.id)
+    from legal_plant as lpa
+    left join legal_person as lpe on lpa.legal_person_code = lpe.legal_person_code
+    <where>
+      <if test="queryLegalPlantVo.legalPersonName != null">
+        and lpe.legal_person_name like concat('%',#{queryLegalPlantVo.legalPersonName},'%')
+      </if>
+      <if test="queryLegalPlantVo.legalPlantCode != null">
+        and lpa.legal_plant_code like concat('%',#{queryLegalPlantVo.legalPlantCode},'%')
+      </if>
+      <if test="queryLegalPlantVo.legalPlantDec != null">
+        and lpa.legal_plant_des like concat('%',#{queryLegalPlantVo.legalPlantDec},'%')
+      </if>
+      <if test="queryLegalPlantVo.enabled != null">
+        and lpa.enable like concat('%',#{queryLegalPlantVo.enabled},'%')
+      </if>
+    </where>
+  </select>
+
+  <!--新增时验证工厂编号是否已存在-->
+  <select id="getCountByCode" resultType="java.lang.Integer">
+    select count(*) from legal_plant
+    <where>
+      legal_plant_code = #{legalPlant.legalPlantCode}
+    </where>
+  </select>
+  <!--法人工厂下拉列表-->
+    <select id="queryPlantListByLegalPersonCode" resultType="com.hs.bean.legalplant.LegalPlant">
+      select lpr.legal_person_code as legalPersonCode,lpt.legal_plant_code as legalPlantCode,lpt.legal_plant_des as legalPlantDec
+      from legal_person as lpr
+      left join legal_plant as lpt on lpr.legal_person_code = lpt.legal_person_code
+      <where>
+        <if test="legalPersonCode != null and legalPersonCode != ''">
+          lpt.legal_person_code =#{legalPersonCode}
+        </if>
+      </where>
+    </select>
+
+
+    <!--新增法人工厂-->
+  <insert id="addLegalPlant" >
+    insert into legal_plant (legal_plant_code,legal_plant_des,
+                             legal_person_code,enable,version,
+                             create_man,create_time,modify_man,modify_time)
+    values (#{legalPlant.legalPlantCode},#{legalPlant.legalPlantDec},
+            #{legalPlant.legalPersonCode},#{legalPlant.enabled},0,
+            #{legalPlant.createMan},SYSDATE(),#{legalPlant.modifyMan},SYSDATE())
+  </insert>
+
+  <!--启用禁用-->
+  <update id="updateEnabled">
+    update legal_plant set enable = #{legalPlant.enabled} where legal_plant_code = #{legalPlant.legalPlantCode}
+  </update>
+
+  <!--修改法人工厂信息-->
+  <update id="modifyLegalPlant">
+    update legal_plant
+    <set>
+      <if test="queryLegalPlantVo.legalPlantDec != null">
+        legal_plant_des = #{queryLegalPlantVo.legalPlantDec},
+      </if>
+      enable = #{queryLegalPlantVo.enabled},
+      modify_time = SYSDATE(),
+      version = version+1
+    </set>
+    <where>
+      legal_plant_code = #{queryLegalPlantVo.legalPlantCode}
+    </where>
+  </update>
+
+
+
+</mapper>

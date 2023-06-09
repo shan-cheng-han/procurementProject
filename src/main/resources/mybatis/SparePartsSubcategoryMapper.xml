@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hs.mapper.SparePartsSubcategoryMapper">
+    <resultMap id="SparePartsSubcategoryMap" type="com.hs.bean.SparePartsSubcategory">
+        <id column="id" jdbcType="INTEGER" property="id" />
+        <result column="subclass_encoding" jdbcType="VARCHAR" property="subclassEncoding" />
+        <result column="subclass_name" jdbcType="VARCHAR" property="subclassName" />
+        <result column="status" jdbcType="VARCHAR" property="status" />
+        <result column="description" jdbcType="VARCHAR" property="description" />
+    </resultMap>
+
+    <!--修改备件小类-->
+    <update id="updateSubclass">
+        update spare_parts_subcategory
+        <set>
+            <if test="sparePartsSubcategory.subclassEncoding != null">
+                subclass_encoding = #{sparePartsSubcategory.subclassEncoding,jdbcType=VARCHAR},
+            </if>
+            <if test="sparePartsSubcategory.subclassName != null">
+                subclass_name = #{sparePartsSubcategory.subclassName,jdbcType=VARCHAR},
+            </if>
+            <if test="sparePartsSubcategory.status != null">
+                status = #{sparePartsSubcategory.status,jdbcType=VARCHAR},
+            </if>
+            <if test="sparePartsSubcategory.description != null">
+                description = #{sparePartsSubcategory.description,jdbcType=VARCHAR},
+            </if>
+        </set>
+    </update>
+
+    <!--修改备件小类回显-->
+    <select id="getSubclass" resultMap="SparePartsSubcategoryMap">
+        select * from spare_parts_subcategory where id = #{id}
+    </select>
+
+    <!--备件小类启用禁用-->
+    <update id="enableSubclass">
+        update spare_parts_subcategory
+        <set>
+            <if test="sparePartsSubcategory.status == '1'">
+                status = "0",
+            </if>
+            <if test="sparePartsSubcategory.status == '0'">
+                status = "1",
+            </if>
+        </set>
+        where id = #{sparePartsSubcategory.id}
+    </update>
+
+    <!--新增备件小类-->
+    <insert id="addSubclass">
+        insert into spare_parts_subcategory(subclass_encoding,subclass_name,status,description)
+        values (#{sparePartsSubcategory.subclassEncoding},#{sparePartsSubcategory.subclassName},
+                #{sparePartsSubcategory.status},#{sparePartsSubcategory.description})
+    </insert>
+
+    <!--获取分类小件信息列表-->
+    <select id="getSubcategories" resultMap="SparePartsSubcategoryMap">
+        select * from spare_parts_subcategory as sps
+        <where>
+            <if test="querySparePartsSubcategoryVo.subclassEncoding != null">
+                and sps.subclass_encoding like concat('%',#{querySparePartsSubcategoryVo.subclassEncoding},'%')
+            </if>
+            <if test="querySparePartsSubcategoryVo.subclassName != null">
+                and sps.subclass_name like concat('%',#{querySparePartsSubcategoryVo.subclassName},'%')
+            </if>
+            <if test="querySparePartsSubcategoryVo.status == '0'">
+                and sps.status == #{querySparePartsSubcategoryVo.status}
+            </if>
+            <if test="querySparePartsSubcategoryVo.status == '1'">
+                and sps.status == #{querySparePartsSubcategoryVo.status}
+            </if>
+        </where>
+        order by id asc
+        limit #{querySparePartsSubcategoryVo.pageSize},#{querySparePartsSubcategoryVo.pageSize}
+    </select>
+
+    <!--查询该条件下数据总条数-->
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(sps.id)
+        from spare_parts_subcategory as sps
+        <where>
+            <if test="querySparePartsSubcategoryVo.subclassEncoding != null">
+                and sps.subclass_encoding like concat('%',#{querySparePartsSubcategoryVo.subclassEncoding},'%')
+            </if>
+            <if test="querySparePartsSubcategoryVo.subclassName != null">
+                and sps.subclass_name like concat('%',#{querySparePartsSubcategoryVo.subclassName},'%')
+            </if>
+            <if test="querySparePartsSubcategoryVo.status == '0'">
+                and sps.status == #{querySparePartsSubcategoryVo.status}
+            </if>
+            <if test="querySparePartsSubcategoryVo.status == '1'">
+                and sps.status == #{querySparePartsSubcategoryVo.status}
+            </if>
+        </where>
+    </select>
+
+
+
+</mapper>

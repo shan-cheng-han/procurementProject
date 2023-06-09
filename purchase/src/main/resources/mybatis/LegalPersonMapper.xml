@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hs.mapper.LegalPersonMapper" >
+    <resultMap id="BaseResultMap" type="com.hs.bean.legalperson.LegalPerson" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="legal_person_code" property="legalPersonCode" jdbcType="VARCHAR" />
+        <result column="legal_person_name" property="legalPersonName" jdbcType="VARCHAR" />
+        <result column="status" property="status" jdbcType="INTEGER" />
+        <result column="user_id" property="userId" jdbcType="INTEGER" />
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="create_man" property="createMan" jdbcType="VARCHAR" />
+        <result column="modify_time" property="modifyTime" jdbcType="TIMESTAMP" />
+        <result column="modify_man" property="modifyMan" jdbcType="VARCHAR" />
+        <result column="version" property="version" jdbcType="INTEGER" />
+        <result column="spare_code" property="spareCode" jdbcType="INTEGER" />
+        <result column="name" property="userName" jdbcType="VARCHAR" />
+    </resultMap>
+
+    <!--查询全部法人全部信息-->
+    <select id="legalPersonList" resultMap="BaseResultMap">
+        select * from legal_person
+        <where>
+            user_id = #{userId}
+        </where>
+    </select>
+    <!--根据备件编码查询这个备件的所有法人名称-->
+    <select id="getNameList" resultType="java.lang.String">
+        select lpe.legal_person_name
+        from spare as sp
+        left join legal_person_spare_relationship as rel on sp.id = rel.spare_id
+        left join legal_person as lpe on lpe.id = rel.legal_person_id
+        <where>
+            sp.code = #{spareCode}
+        </where>
+    </select>
+
+    <!--分页查询之获取法人列表-->
+    <select id="getLegalPersonList" resultMap="BaseResultMap">
+        select lp.*,ur.name as name
+        from legal_person as lp
+        left join user as ur on lp.user_id = ur.id
+        <where>
+            <if test="queryLegalPersonVo.userId != null">
+                and lp.user_id like concat('%',#{queryLegalPersonVo.userId},'%')
+            </if>
+            <if test="queryLegalPersonVo.legalPersonCode != null">
+                and lp.legal_person_code like concat('%',#{queryLegalPersonVo.legalPersonCode},'%')
+            </if>
+            <if test="queryLegalPersonVo.legalPersonName != null">
+                and lp.legal_person_name like concat('%',#{queryLegalPersonVo.legalPersonName},'%')
+            </if>
+            <if test="queryLegalPersonVo.status != null">
+                and lp.status like concat('%',#{queryLegalPersonVo.status},'%')
+            </if>
+        </where>
+    </select>
+    <!--分页查询之获取法人数量-->
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(lp.id)
+        from legal_person as lp
+        left join user as ur on lp.user_id = ur.id
+        <where>
+            <if test="queryLegalPersonVo.userId != null">
+                and lp.user_id like concat('%',#{queryLegalPersonVo.userId},'%')
+            </if>
+            <if test="queryLegalPersonVo.legalPersonCode != null and queryLegalPersonVo.legalPersonCode !=''">
+                and lp.legal_person_code like concat('%',#{queryLegalPersonVo.legalPersonCode},'%')
+            </if>
+            <if test="queryLegalPersonVo.legalPersonName != null">
+                and lp.legal_person_name like concat('%',#{queryLegalPersonVo.legalPersonName},'%')
+            </if>
+            <if test="queryLegalPersonVo.status != null">
+                and lp.status like concat('%',#{queryLegalPersonVo.status},'%')
+            </if>
+        </where>
+    </select>
+
+
+</mapper>

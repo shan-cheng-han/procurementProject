@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hs.mapper.FazhiMapper">
+    <resultMap id="BaseResultMap" type="com.hs.bean.fazhi.Fazhi" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="fazhi_num" property="fazhiNum" jdbcType="INTEGER" />
+        <result column="remark" property="remark" jdbcType="VARCHAR" />
+        <result column="create_man" property="createMan" jdbcType="VARCHAR" />
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="modify_man" property="modifyMan" jdbcType="VARCHAR" />
+        <result column="modify_time" property="modifyTime" jdbcType="TIMESTAMP" />
+        <result column="version" property="version" jdbcType="INTEGER" />
+        <result column="legal_person_code" property="legalPersonCode" jdbcType="VARCHAR" />
+        <result column="spare_code" property="spareCode" jdbcType="VARCHAR" />
+    </resultMap>
+    <resultMap id="QueryBackMap" type="com.hs.bean.fazhi.QueryFazhiRe" >
+        <result column="spa_code" property="spareCode" jdbcType="VARCHAR" />
+        <result column="spa_name" property="spareName" jdbcType="VARCHAR" />
+        <result column="spare_unit" property="spareUnit" jdbcType="VARCHAR" />
+        <result column="sub_name" property="subclassName" jdbcType="VARCHAR" />
+        <result column="fazhi_num" property="fazhiNum" jdbcType="INTEGER" />
+        <result column="status" property="status" jdbcType="INTEGER" />
+        <result column="is_borrow" property="isBorrow" jdbcType="INTEGER" />
+        <result column="is_sell" property="isSell" jdbcType="INTEGER" />
+        <result column="remark" property="remark" jdbcType="VARCHAR" />
+        <result column="legal_person_name" property="legalPersonName" jdbcType="VARCHAR" />
+        <result column="create_man" property="createMan" jdbcType="VARCHAR" />
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="modify_man" property="modifyMan" jdbcType="VARCHAR" />
+        <result column="modify_time" property="modifyTime" jdbcType="TIMESTAMP" />
+    </resultMap>
+
+
+    <insert id="addFazhi">
+        insert into fazhi(fazhi_num,remark,create_man,create_time,modify_man,modify_time,
+                          version,legal_person_code,spare_code)
+        values (#{fazhi.fazhiNum},#{fazhi.remark},#{fazhi.createMan},#{fazhi.createTime},#{fazhi.modifyMan},#{fazhi.modifyTime},
+                0,#{fazhi.legalPersonCode},#{fazhi.spareCode})
+    </insert>
+    <update id="updateFazhi">
+        update fazhi
+        <set>
+            <if test="fazhi.fazhiNum != null and fazhi.fazhiNum != ''">
+                fazhi_num = #{fazhi.fazhiNum},
+            </if>
+            <if test="fazhi.remark != null and fazhi.remark != ''">
+                remark = #{fazhi.remark},
+            </if>
+            modify_man = #{fazhi.modifyMan},
+            modify_time = #{fazhi.modifyTime},
+            version = version+1
+        </set>
+        <where>
+            id = #{fazhi.id}
+        </where>
+    </update>
+
+    <select id="getFazhiList" resultMap="QueryBackMap">
+        select spa.code as spa_code,spa.name as spa_name,spa.spare_unit,
+               sub.name as sub_name,
+               fa.fazhi_num,
+               spa.status,spa.is_borrow,spa.is_sell,
+               fa.remark,
+               lpe.legal_person_name,
+               fa.create_man,fa.create_time,fa.modify_man,fa.modify_time
+        from fazhi as fa
+        left join legal_person as lpe on fa.legal_person_code = lpe.legal_person_code
+        left join legal_person_spare_relationship as lpesr on lpe.id = lpesr.legal_person_id
+        left join spare as spa on spa.code = lpesr.spare_code
+        left join subclass as sub on spa.subclass_id = sub.id
+        <where>
+            <if test="fa.legalPersonCode != null and fa.legalPersonCode !=''">
+                and lpe.legal_person_code = #{fa.legalPersonCode}
+            </if>
+            <if test="fa.spareCode != null and fa.spareCode !=''">
+                and lpe.legal_person_code = #{fa.spareCode}
+            </if>
+            <if test="fa.spareCode != null and fa.spareCode !=''">
+                and lpe.legal_person_code = #{fa.subclassCode}
+            </if>
+            <if test="fa.minFazhiNum != null and fa.minFazhiNum !=''">
+                and fa.fazhi_num >= #{fa.minFazhiNum}
+            </if>
+            <if test="fa.maxFazhiNum != null and fa.maxFazhiNum !=''">
+                and fa.fazhi_num &lt;= #{fa.maxFazhiNum}
+            </if>
+            <if test="fa.minModifyTime != null ">
+                and fa.modify_time >= #{fa.minModifyTime}
+            </if>
+            <if test="fa.maxModifyTime != null ">
+                and fa.modify_time &lt;= #{fa.maxModifyTime}
+            </if>
+        </where>
+        order by fa.modify_time desc
+        limit #{fa.offSize},#{fa.pageSize}
+
+    </select>
+
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(fa.id)
+        from fazhi as fa
+        left join  legal_person as lpe on fa.legal_person_code = lpe.legal_person_code
+        left join legal_person_spare_relationship as lpesr on lpe.id = lpesr.legal_person_id
+        left join spare as spa on spa.code = lpesr.spare_code
+        left join subclass as sub on spa.subclass_id = sub.id
+        <where>
+            <if test="fa.legalPersonCode != null and fa.legalPersonCode !=''">
+                and lpe.legal_person_code = #{fa.legalPersonCode}
+            </if>
+            <if test="fa.spareCode != null and fa.spareCode !=''">
+                and lpe.legal_person_code = #{fa.spareCode}
+            </if>
+            <if test="fa.spareCode != null and fa.spareCode !=''">
+                and lpe.legal_person_code = #{fa.subclassCode}
+            </if>
+            <if test="fa.minFazhiNum != null and fa.minFazhiNum !=''">
+                and fa.fazhi_num >= #{fa.minFazhiNum}
+            </if>
+            <if test="fa.maxFazhiNum != null and fa.maxFazhiNum !=''">
+                and fa.fazhi_num &lt;= #{fa.maxFazhiNum}
+            </if>
+            <if test="fa.minModifyTime != null ">
+                and fa.modify_time >= #{fa.minModifyTime}
+            </if>
+            <if test="fa.maxModifyTime != null ">
+                and fa.modify_time &lt;= #{fa.maxModifyTime}
+            </if>
+
+        </where>
+    </select>
+
+
+</mapper>

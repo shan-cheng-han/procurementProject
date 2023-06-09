@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hs.mapper.SubclassMapper">
+    <resultMap id="SubclassMap" type="com.hs.bean.subclass.Subclass" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="code" property="code" jdbcType="VARCHAR" />
+        <result column="name" property="name" jdbcType="VARCHAR" />
+        <result column="status" property="status" jdbcType="INTEGER" />
+        <result column="remark" property="remark" jdbcType="VARCHAR" />
+        <result column="version" property="version" jdbcType="INTEGER" />
+        <result column="create_man" property="createMan" jdbcType="VARCHAR" />
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="modify_man" property="modifyMan" jdbcType="VARCHAR" />
+        <result column="modify_time" property="modifyTime" jdbcType="TIMESTAMP" />
+    </resultMap>
+
+    <!--新增备件小类-->
+    <insert id="addSubclass" parameterType="com.hs.bean.subclass.AddSubclassVo">
+        insert into subclass (code, name,
+                              remark,status, version,
+                              create_man, create_time, modify_man,
+                              modify_time)
+        values (#{addSubclassVo.code,jdbcType=VARCHAR}, #{addSubclassVo.name,jdbcType=VARCHAR},
+                #{addSubclassVo.remark,jdbcType=VARCHAR},#{addSubclassVo.status,jdbcType=INTEGER},  0,
+                #{addSubclassVo.createMan,jdbcType=VARCHAR}, SYSDATE(),
+                #{addSubclassVo.modifyMan,jdbcType=VARCHAR},SYSDATE())
+    </insert>
+    <select id="getCountByCode" resultType="java.lang.Integer">
+        select count(*) from subclass where code = #{code}
+    </select>
+    <select id="getCountByName" resultType="java.lang.Integer">
+        select count(*) from subclass where name = #{name}
+    </select>
+
+    <!--获取分类小件信息列表-->
+    <select id="getSubcategories" resultMap="SubclassMap">
+        select * from subclass
+        <where>
+            <if test="querySubclassVo.code != null">
+                and code like concat('%',#{querySubclassVo.code},'%')
+            </if>
+            <if test="querySubclassVo.name != null">
+                and name like concat('%',#{querySubclassVo.name},'%')
+            </if>
+            <if test="querySubclassVo.status != null">
+                and status like concat('%',#{querySubclassVo.status},'%')
+            </if>
+        </where>
+        order by id asc
+        limit #{querySubclassVo.offSize},#{querySubclassVo.pageSize}
+    </select>
+    <!--查询该条件下数据总条数-->
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(id)
+        from subclass
+        <where>
+            <if test="querySubclassVo.code != null">
+                and code like concat('%',#{querySubclassVo.code},'%')
+            </if>
+            <if test="querySubclassVo.name != null">
+                and name like concat('%',#{querySubclassVo.name},'%')
+            </if>
+            <if test="querySubclassVo.status">
+                and status == 0
+            </if>
+        </where>
+    </select>
+
+
+    <!--备件小类启用禁用-->
+    <update id="updateStatus">
+        update subclass
+        <set>
+            status = #{subclass.status},
+        </set>
+        where id = #{subclass.id}
+    </update>
+
+    <!--修改备件小类-->
+    <update id="modifySubClass">
+        update subclass
+        <set>
+            <if test="subclass.name != null">
+                name = #{subclass.name,jdbcType=VARCHAR},
+            </if>
+            status = #{subclass.status},
+            <if test="subclass.remark != null">
+                remark = #{subclass.remark,jdbcType=VARCHAR},
+            </if>
+            modify_time = SYSDATE(),
+            version = version+1
+        </set>
+        <where>
+            id = #{subclass.id} and version = #{subclass.version}
+        </where>
+    </update>
+
+    <select id="getStatus" resultType="java.lang.Integer">
+        select status from subclass
+        <where>
+            id = #{id}
+        </where>
+    </select>
+    <!--查询所有计划大类-->
+    <select id="planCategoryAll" resultType="com.hs.bean.planCategory.PlanCategory">
+        select * from plan_category
+    </select>
+    <!--查询所有备件小类-->
+    <select id="subClassAll" resultType="com.hs.bean.subclass.Subclass">
+        select * from  subclass
+    </select>
+
+    <select id="getSubclassNameBySpareCode" resultMap="SubclassMap">
+        select name,code from subclass where spare_code = #{spareCode}
+    </select>
+
+
+</mapper>

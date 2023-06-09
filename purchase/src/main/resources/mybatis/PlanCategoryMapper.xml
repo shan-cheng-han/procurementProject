@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hs.mapper.PlanCategoryMapper">
+    <resultMap id="BaseResultMap" type="com.hs.bean.planCategory.PlanCategory" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="code" property="code" jdbcType="VARCHAR" />
+        <result column="name" property="name" jdbcType="VARCHAR" />
+        <result column="remark" property="remark" jdbcType="VARCHAR" />
+        <result column="status" property="status" jdbcType="INTEGER" />
+        <result column="version" property="version" jdbcType="INTEGER" />
+        <result column="create_man" property="createMan" jdbcType="VARCHAR" />
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="modify_man" property="modifyMan" jdbcType="VARCHAR" />
+        <result column="modify_time" property="modifyTime" jdbcType="TIMESTAMP" />
+    </resultMap>
+
+    <!--获取分类小件信息列表-->
+    <select id="getPlanCategoryList" resultMap="BaseResultMap">
+        select * from plan_category
+        <where>
+            <if test="queryPlanCategoryVo.code != null">
+                and code like concat('%',#{queryPlanCategoryVo.code},'%')
+            </if>
+            <if test="queryPlanCategoryVo.name != null">
+                and name like concat('%',#{queryPlanCategoryVo.name},'%')
+            </if>
+            <if test="queryPlanCategoryVo.status">
+                and status == 0
+            </if>
+        </where>
+        order by id asc
+        limit #{queryPlanCategoryVo.offSize},#{queryPlanCategoryVo.pageSize}
+    </select>
+    <!--查询该条件下数据总条数-->
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(id)
+        from subclass
+        <where>
+            <if test="queryPlanCategoryVo.code != null">
+                and code like concat('%',#{queryPlanCategoryVo.code},'%')
+            </if>
+            <if test="queryPlanCategoryVo.name != null">
+                and name like concat('%',#{queryPlanCategoryVo.name},'%')
+            </if>
+            <if test="queryPlanCategoryVo.status">
+                and status == 0
+            </if>
+        </where>
+    </select>
+    <!--新增-->
+    <select id="getCountByCode" resultType="java.lang.Integer">
+        select count(id) from plan_category where code = #{code}
+    </select>
+    <select id="getCountByName" resultType="java.lang.Integer">
+        select count(id) from plan_category where name = #{name}
+    </select>
+    <insert id="addPlanCategory">
+        insert into plan_category (code, name,
+                              remark,status, version,
+                              create_man, create_time, modify_man,
+                              modify_time)
+        values (#{addPlanCategoryVo.code,jdbcType=VARCHAR}, #{addPlanCategoryVo.name,jdbcType=VARCHAR},
+                #{addPlanCategoryVo.remark,jdbcType=VARCHAR},#{addPlanCategoryVo.status,jdbcType=INTEGER},  0,
+                #{addPlanCategoryVo.createMan,jdbcType=VARCHAR}, SYSDATE(),
+                #{addPlanCategoryVo.modifyMan,jdbcType=VARCHAR},SYSDATE())
+    </insert>
+
+    <!--启用禁用-->
+    <update id="updateStatus">
+        update plan_category
+        <set>
+            status = #{planCategory.status},
+            version = version+1,
+        </set>
+        where id = #{planCategory.id}
+    </update>
+
+    <!--修改-->
+    <update id="modifyPlanCategory">
+        update plan_category
+        <set>
+            <if test="planCategory.name != null">
+                name = #{planCategory.name,jdbcType=VARCHAR},
+            </if>
+            status = #{planCategory.status},
+            <if test="planCategory.remark != null">
+                remark = #{planCategory.remark,jdbcType=VARCHAR},
+            </if>
+            version = version+1
+        </set>
+        <where>
+            id = #{planCategory.id}
+        </where>
+    </update>
+
+</mapper>

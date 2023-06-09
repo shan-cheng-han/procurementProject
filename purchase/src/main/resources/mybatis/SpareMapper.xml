@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hs.mapper.SpareMapper" >
+    <resultMap id="BaseResultMap" type="com.hs.bean.spare.Spare" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="code" property="code" jdbcType="VARCHAR" />
+        <result column="name" property="name" jdbcType="VARCHAR" />
+        <result column="status" property="status" jdbcType="INTEGER" />
+        <result column="version" property="version" jdbcType="INTEGER" />
+        <result column="create_man" property="createMan" jdbcType="VARCHAR" />
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="modify_man" property="modifyMan" jdbcType="VARCHAR" />
+        <result column="modify_time" property="modifyTime" jdbcType="TIMESTAMP" />
+        <result column="plan_category_id" property="planClassId" jdbcType="INTEGER" />
+        <result column="subclass_id" property="subClassId" jdbcType="INTEGER" />
+       <result column="scname" property="subClassName" jdbcType="VARCHAR" />
+       <result column="pcname" property="planClassName" jdbcType="VARCHAR" />
+    </resultMap>
+
+
+
+    <select id="getSpareList" resultMap="BaseResultMap">
+        select sp.*,pc.name  as pcname,sc.name as scname
+        from spare as sp
+        left join subclass as sc on sc.id = sp.subclass_id
+        left join plan_category as pc on pc.id = sp.plan_category_id
+        <where>
+            <if test="querySpareVo.code != null">
+                and sp.code like concat('%',#{querySpareVo.code},'%')
+            </if>
+            <if test="querySpareVo.name != null">
+                and sp.name like concat('%',#{querySpareVo.name},'%')
+            </if>
+            <if test="querySpareVo.status != null">
+                and sp.status like concat('%',#{querySpareVo.status},'%')
+            </if>
+        </where>
+        order by create_time desc
+        limit #{querySpareVo.offSize},#{querySpareVo.pageSize}
+    </select>
+
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(id)
+        from spare
+        <where>
+            <if test="querySpareVo.code != null">
+                and code like concat('%',#{querySpareVo.code},'%')
+            </if>
+            <if test="querySpareVo.name != null">
+                and name like concat('%',#{querySpareVo.name},'%')
+            </if>
+            <if test="querySpareVo.status">
+                and status == 0
+            </if>
+        </where>
+    </select>
+
+    <!--更改备件状态-->
+    <update id="updateStatus">
+        update spare
+        <set>
+            status = #{spare.status},
+        </set>
+        where id = #{spare.id}
+    </update>
+
+
+     <!--验证备件编码是否已存在-->
+     <select id="getCountByCode" resultType="java.lang.Integer">
+         select count(*) from spare where code = #{code}
+     </select>
+     <!--验证备件名称是否已存在-->
+     <select id="getCountByName" resultType="java.lang.Integer">
+         select count(*) from spare where name = #{name}
+     </select>
+
+    <!--根据备件名称获取备件id-->
+    <select id="getIdByName" resultType="java.lang.Integer">
+        select id from spare where name = #{name}
+    </select>
+
+     <insert id="addSpare" parameterType="com.hs.bean.spare.AddSpareVo">
+         insert into spare (code, name,status, version,
+                            create_man, create_time, modify_man,modify_time,
+                            plan_category_id,subclass_id
+                         )
+         values (#{addSpareVo.code,jdbcType=VARCHAR}, #{addSpareVo.name,jdbcType=VARCHAR},#{addSpareVo.status,jdbcType=INTEGER},  0,
+                 #{addSpareVo.createMan,jdbcType=VARCHAR}, SYSDATE(),#{addSpareVo.modifyMan,jdbcType=VARCHAR},SYSDATE(),
+                 #{addSpareVo.planClassId},#{addSpareVo.subClassId})
+     </insert>
+
+    <!--为法人备件关系表添加关系-->
+    <insert id="addLegalPersonIdAndSpareId">
+        insert into legal_person_spare_relationship(spare_id,legal_person_id)
+        values (#{spareId},#{personId})
+    </insert>
+    <!--为法人备件关系表更新关系做准备-->
+    <delete id="deleteLegalPersonIdAndSpareId">
+        delete from legal_person_spare_relationship where  spare_id = #{spareId}
+    </delete>
+
+
+
+    <!--查询备件状态是否已禁用-->
+     <select id="getStatus" resultType="java.lang.Integer">
+         select status from spare
+         <where>
+             id = #{id}
+         </where>
+     </select>
+    <select id="getSpareCodeAndNameByLegalPersonCode" resultMap="BaseResultMap">
+        select name,code from spare where legal_person_code = #{legalPersonCode}
+    </select>
+
+
+    <!--修改备件信息-->
+     <update id="modifySubClass">
+         update spare
+         <set>
+             <if test="spare.name != null">
+                 name = #{spare.name,jdbcType=VARCHAR},
+             </if>
+             status = #{spare.status},
+             <if test="spare.subClassId != null">
+                 subclass_id = #{spare.subClassId,jdbcType=INTEGER},
+             </if>
+             <if test="spare.planClassId != null">
+                 plan_category_id = #{spare.planClassId,jdbcType=INTEGER},
+             </if>
+             modify_time = SYSDATE(),
+             version = version+1
+         </set>
+         <where>
+             id = #{spare.id} and version = #{spare.version}
+         </where>
+     </update>
+
+
+</mapper>
